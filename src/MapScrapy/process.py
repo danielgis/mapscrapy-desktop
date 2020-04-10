@@ -2,14 +2,16 @@ import requests
 import validators
 import os
 import uuid
-import tempfile
 import geopandas as gpd
 import pandas as pd
 import json
+import time
+from MapScrapy import settings
 
 _ERROR_NOT_URL = 'No se ingreso la url del servicio'
 _ERROR_NOT_URL_VALID = 'La url ingresada es no valida'
 _ERROR_NOT_OUTPUT = 'El directorio especificado no existe'
+_CONTROLLER = 0
 
 def manageResponse(func):
 	def newfunction(*args, **kwargs):
@@ -39,12 +41,13 @@ class DownloadService(object):
 		self.paramobjectIdFieldName = 'objectIdFieldName'
 		self.paramsObjectids = 'objectIds'
 
-		self.range = 100
+		self.range = 500
 
 		self.obectids = list()
 		self.responses = list()
 		self.oidname = str()
 		self.output_shp = str()
+
 
 
 	def validateUrl(self):
@@ -70,22 +73,30 @@ class DownloadService(object):
 		self.objectids = [response_as_json[self.paramsObjectids][i:i + self.range] for i in range(0, len(response_as_json['objectIds']), self.range)]
 
 
-	def download(self):
-		del self.data['returnIdsOnly']
-
-		for oid in self.objectids:
-			objectIds = ', '.join(map(lambda i: str(i), oid))
+	def downloadOne(self, objectisd):
+		try:
+			objectIds = ', '.join(map(lambda i: str(i), objectisd))
 			self.data['where'] = "{} IN ({})".format(self.oidname, objectIds)
 
 			response = requests.post(self.urlQuery, self.data)
 			response_as_json = json.loads(response.content.decode('utf-8'))
 
-			if not response_as_json['features']:
-				break
-
 			gdf = gpd.GeoDataFrame().from_features(response_as_json)
 
 			self.responses.append(gdf)
+		except:
+			_CONTROLLER = _CONTROLLER + 1
+			if _CONTROLLER < 2:
+				time.sleep(10*60)
+				self.downloadOne(objectids)
+			pass
+
+
+	def download(self):
+		del self.data['returnIdsOnly']
+
+		for oid in self.objectids:
+			self.downloadOne(oid)
 
 		name_shp = 'response_{}.shp'.format(uuid.uuid4())
 		self.output_shp = os.path.join(self.output, name_shp)

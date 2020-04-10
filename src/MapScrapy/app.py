@@ -6,6 +6,7 @@ from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 from MapScrapy.process import *
 from datetime import datetime
+import subprocess
 
 
 _DATE = datetime.now()
@@ -21,12 +22,16 @@ _TITLE_ERROR = 'MapScrapy {} - Error!'.format(_DATE.year)
 _TITLE_SUCCESS = 'MapScrapy {} - Success!'.format(_DATE.year)
 _MESSAGE_COMPLEMENT_ERROR = 'Ocurrio el siguiente error durante el proceso:\n'
 _MESSAGE_COMPLEMENT_SUCCESS = 'El proceso se ejecuto satisfactoriamente!'
+_TC_UPDATEURL_BUTTON = 'Ontener la URL actual'
+_PID_EXE = None
 
 
 class Mapscrapy(toga.App):
 
     def startup(self):
-# contenedor principal de la aplicacion
+
+        self.pid = None
+        # contenedor principal de la aplicacion
         main_box = toga.Box(style=Pack(direction=COLUMN, padding=10))
         
         # contenedor primario para carga de url
@@ -45,8 +50,10 @@ class Mapscrapy(toga.App):
         first_box.add(self.url_load)
 
         # Contenedor de metadata
-        self.metadata = toga.MultilineTextInput(id=_ID_MULTILINETEXTINPUT_METADATA)
-        self.metadata.readonly = True
+        # self.metadata = toga.MultilineTextInput(id=_ID_MULTILINETEXTINPUT_METADATA)
+        # self.metadata.readonly = True
+
+        self.web = toga.WebView(style=Pack(flex=1))
 
         # Contenedor para seleccionar el folder
         self.window = toga.Window()
@@ -61,6 +68,8 @@ class Mapscrapy(toga.App):
         second_box.add(self.output_folder)
         second_box.add(self.savefolder)
 
+        # self.updateurl = toga.Button(_TC_UPDATEURL_BUTTON, on_press=self.updateUrl)
+
         # Boton de decarga
         self.download = toga.Button(_TC_DOWNLOAD_BUTTON, on_press=self.download)
 
@@ -72,22 +81,40 @@ class Mapscrapy(toga.App):
         
 
         main_box.add(first_box)
-        main_box.add(self.metadata)
+        # main_box.add(self.metadata)
+        main_box.add(self.web)
         main_box.add(second_box)
         # main_box.add(self.savefolder)
         # main_box.add(self.output_folder)
+        # main_box.add(self.updateurl)
         main_box.add(self.download)
         main_box.add(self.openfolder)
 
 
-        self.main_window = toga.MainWindow(title=self.formal_name)
+        self.main_window = toga.MainWindow(title=self.formal_name, size = (640 , 700))
         self.main_window.content = main_box
         self.main_window.show()
 
+        self.response_pool = list()
+
     def load_metadata(self, widget):
-        self.metadata.value = self.url_input.value
+        # self.metadata.value = self.url_input.value
+        self.web.url = self.url_input.value
+        self.web.refresh()
+
+    def run_loader(self, kill=False):
+        global _PID_EXE
+        if kill:
+            if not _PID_EXE:
+                return
+            _PID_EXE.kill()
+            _PID_EXE = None
+            return
+        _PID_EXE = subprocess.Popen([settings.EXE_LOADER])
+
 
     def download(self, widget):
+        self.run_loader()
         self.url_input.enabled = False
         self.url_load.enabled = False
         self.savefolder.enabled = False
@@ -96,9 +123,11 @@ class Mapscrapy(toga.App):
         response = service.downloadProcess()
         exec_datetime = '\n' + datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         if not response['status']:
+            self.run_loader(kill=True)
             message_error =  _MESSAGE_COMPLEMENT_ERROR + response['message'] + exec_datetime
             self.window.error_dialog(_TITLE_ERROR, message_error)
         else:
+            self.run_loader(kill=True)
             message_success =  _MESSAGE_COMPLEMENT_SUCCESS + exec_datetime
             self.window.info_dialog(_TITLE_SUCCESS, message_success)
         self.url_input.enabled = True
@@ -106,7 +135,6 @@ class Mapscrapy(toga.App):
         self.savefolder.enabled = True
         self.download.enabled = True
         self.openfolder.enabled = True
-        
         return response
 
     def saveAs(self, widget):
@@ -116,8 +144,12 @@ class Mapscrapy(toga.App):
     def openSaveAs(self, widget):
         os.startfile(self.output_folder.value)
 
+    # def updateUrl(self, widget):
+    #     self.web.refresh()
+    #     self.url_input.value = self.web.url
+    #     print(self.web._impl._container.__dict__)
 
 
 
 def main():
-    return Mapscrapy()
+    return Mapscrapy(home_page='https://danielgis.github.io')
