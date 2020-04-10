@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: MapScrapy
+Formal-Name: Mapscrapy
+App-ID: io.danielgis.github.MapScrapy
+Version: 0.0.1
+Home-page: https://danielgis.github.io/mapscrapy
+Author: DanielGIS (Daniel Aguado H.)
+Author-email: daniel030891@gmail.com
+Summary: Aplicacion que permite la descarga de servicios WMS de ArcGIS Server en un entorno de escritorio

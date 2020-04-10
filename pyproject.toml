@@ -1,0 +1,50 @@
+[build-system]
+requires = ["briefcase"]
+
+[tool.briefcase]
+project_name = "Mapscrapy"
+bundle = "io.danielgis.github"
+version = "0.0.1"
+url = "https://danielgis.github.io/mapscrapy"
+license = "MIT license"
+author = 'DanielGIS (Daniel Aguado H.)'
+author_email = "daniel030891@gmail.com"
+
+[tool.briefcase.app.MapScrapy]
+formal_name = "Mapscrapy"
+description = "Aplicacion que permite la descarga de servicios WMS de ArcGIS Server en un entorno de escritorio"
+icon = "src/MapScrapy/resources/MapScrapy"
+sources = ['src/MapScrapy']
+requires = []
+
+
+[tool.briefcase.app.MapScrapy.macOS]
+requires = [
+    'toga-cocoa>=0.3.0.dev18',
+]
+
+[tool.briefcase.app.MapScrapy.linux]
+requires = [
+    'toga-gtk>=0.3.0.dev18',
+]
+
+[tool.briefcase.app.MapScrapy.windows]
+requires = [
+    'toga-winforms>=0.3.0.dev18',
+    'C:\daniel\desarrollo\mapscrapy-desktop\requires\GDAL-3.0.4-cp37-cp37m-win_amd64.whl',
+    'C:\daniel\desarrollo\mapscrapy-desktop\requires\Fiona-1.8.13-cp37-cp37m-win_amd64.whl',
+    'geopandas',
+    'requests',
+    'validators'
+]
+
+# Mobile deployments
+[tool.briefcase.app.MapScrapy.iOS]
+requires = [
+    'toga-iOS>=0.3.0.dev18',
+]
+
+[tool.briefcase.app.MapScrapy.android]
+requires = [
+    'toga-android>=0.3.0.dev18',
+]
