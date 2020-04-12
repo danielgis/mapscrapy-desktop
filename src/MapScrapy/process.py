@@ -7,11 +7,18 @@ import pandas as pd
 import json
 import time
 from MapScrapy import settings
+from MapScrapy import packages
+# import settings
 
 _ERROR_NOT_URL = 'No se ingreso la url del servicio'
-_ERROR_NOT_URL_VALID = 'La url ingresada es no valida'
+_ERROR_NOT_URL_VALID = 'La url ingresada no es valida'
 _ERROR_NOT_OUTPUT = 'El directorio especificado no existe'
+_ERROR_NOT_PARAMETER_PATH = 'No se ingreso el parametros ruta (path)'
+_ERROR_NOT_PARAMETER_URL = 'No se ingreso el parametros url'
 _CONTROLLER = 0
+_RANGE = int(packages.get_config_param_value(2)[0][0])
+_WAIT = int(packages.get_config_param_value(3)[0][0])
+_TRIED = int(packages.get_config_param_value(4)[0][0])
 
 def manageResponse(func):
 	def newfunction(*args, **kwargs):
@@ -23,8 +30,32 @@ def manageResponse(func):
 			response['status'] = 0
 			response['message'] = str(e)
 		finally:
+			err = kwargs.get('exeraise')
+			if err and not response['status']:
+				raise RuntimeError(response['message'])
 			return response
 	return newfunction
+
+
+@manageResponse
+def validateUrl(*args, **kwargs):
+	url = kwargs.get('url')
+	if not url:
+		raise RuntimeError(_ERROR_NOT_PARAMETER_URL)
+	if not url:
+		raise RuntimeError(_ERROR_NOT_URL)
+	if not validators.url(url):
+		raise RuntimeError(_ERROR_NOT_URL_VALID)
+	return True
+
+@manageResponse
+def validatePath(*args, **kwargs):
+	path = kwargs.get('path')
+	if not path:
+		raise RuntimeError(_ERROR_NOT_PARAMETER_PATH)
+	if not os.path.exists(path):
+		raise RuntimeError(_ERROR_NOT_OUTPUT)
+	return True
 
 
 class DownloadService(object):
@@ -41,26 +72,15 @@ class DownloadService(object):
 		self.paramobjectIdFieldName = 'objectIdFieldName'
 		self.paramsObjectids = 'objectIds'
 
-		self.range = 500
+		# _RANGE = _RANGE
 
 		self.obectids = list()
 		self.responses = list()
 		self.oidname = str()
 		self.output_shp = str()
 
-
-
-	def validateUrl(self):
-		if not self.url:
-			raise RuntimeError(_ERROR_NOT_URL)
-		if not validators.url(self.url):
-			raise RuntimeError(_ERROR_NOT_URL_VALID)
-		return True
-
-	def validateOutput(self):
-		if not os.path.exists(self.output):
-			raise RuntimeError(_ERROR_NOT_OUTPUT)
-		return True
+		# _WAIT = 10*60
+		# _TRIED = 3
 
 	@property
 	def urlQuery(self):
@@ -70,7 +90,7 @@ class DownloadService(object):
 		response = requests.post(self.urlQuery, data=self.data)
 		response_as_json = response.json()
 		self.oidname = response_as_json[self.paramobjectIdFieldName]
-		self.objectids = [response_as_json[self.paramsObjectids][i:i + self.range] for i in range(0, len(response_as_json['objectIds']), self.range)]
+		self.objectids = [response_as_json[self.paramsObjectids][i:i + _RANGE] for i in range(0, len(response_as_json['objectIds']), _RANGE)]
 
 
 	def downloadOne(self, objectisd):
@@ -86,8 +106,8 @@ class DownloadService(object):
 			self.responses.append(gdf)
 		except:
 			_CONTROLLER = _CONTROLLER + 1
-			if _CONTROLLER < 2:
-				time.sleep(10*60)
+			if _CONTROLLER < _TRIED:
+				time.sleep(_WAIT)
 				self.downloadOne(objectids)
 			pass
 
@@ -107,8 +127,10 @@ class DownloadService(object):
 	
 	@manageResponse
 	def downloadProcess(self):
-		self.validateUrl()
-		self.validateOutput()
+		validateUrl(url=self.url, exeraise=True)
+		validatePath(path=self.output, exeraise=True)
 		self.setObjectidsParams()
 		self.download()
 		return self.output_shp
+
+
