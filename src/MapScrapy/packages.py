@@ -50,4 +50,5 @@ def deleteLogRows(iscommit=True):
 	return 'DELETE FROM TB_LOG'
 
 
+
 # deleteLogRows()

@@ -32,6 +32,12 @@ class Mapscrapy(toga.App):
 
     def startup(self):
 
+        outputFolder = packages.get_config_param_value(5)[0][0]
+        if not outputFolder:
+            outputFolder = tempfile.gettempdir()
+            packages.set_config_param(5, outputFolder)
+
+
         self.pid = None
         # contenedor principal de la aplicacion
         main_box = toga.Box(style=Pack(direction=COLUMN, padding=10))
@@ -63,7 +69,7 @@ class Mapscrapy(toga.App):
         # Input text que almacenara el folder donde se almacenara el resultado
         self.output_folder = toga.TextInput(style=Pack(flex=1))
         self.output_folder.readonly = True
-        self.output_folder.value = tempfile.gettempdir()
+        self.output_folder.value = outputFolder
 
         # Abre ventana para seleccionar un folder de almacenamiento
         self.savefolder = toga.Button(_TC_OUTPUT_BUTTON, on_press=self.saveAs, style=Pack(width=150, height=36))
@@ -111,7 +117,7 @@ class Mapscrapy(toga.App):
     def load_metadata(self, widget):
         url = self.url_input.value
         validate = validateUrl(url=url)
-        print(validate)
+        # print(validate)
         if validate['status']:
             self.web.url = url
             self.web.refresh()
@@ -149,7 +155,8 @@ class Mapscrapy(toga.App):
         self.download.enabled = False
         service = DownloadService(url=self.url_input.value, output=self.output_folder.value)
         response = service.downloadProcess()
-        exec_datetime = '\n' + datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        # print(response)
+        # exec_datetime = '\n' + datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         if not response['status']:
             self.run_loader(kill=True)
             # message_error =  _MESSAGE_COMPLEMENT_ERROR + response['message'] + exec_datetime
@@ -222,6 +229,8 @@ class Mapscrapy(toga.App):
         try:
             for k, v in self.inputsConfig.items():
                 packages.set_config_param(k, v.value)
+                if k == 5:
+                    self.output_folder.value = v.value
             self.show_window_success()
         except Exception as e:
             self.show_window_error(str(e))

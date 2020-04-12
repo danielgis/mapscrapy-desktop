@@ -13,8 +13,8 @@ from MapScrapy import packages
 _ERROR_NOT_URL = 'No se ingreso la url del servicio'
 _ERROR_NOT_URL_VALID = 'La url ingresada no es valida'
 _ERROR_NOT_OUTPUT = 'El directorio especificado no existe'
-_ERROR_NOT_PARAMETER_PATH = 'No se ingreso el parametros ruta (path)'
-_ERROR_NOT_PARAMETER_URL = 'No se ingreso el parametros url'
+_ERROR_NOT_PARAMETER_PATH = 'No se ingreso el parametro ruta (path)'
+_ERROR_NOT_PARAMETER_URL = 'No se ingreso el parametro url'
 _CONTROLLER = 0
 _RANGE = int(packages.get_config_param_value(2)[0][0])
 _WAIT = int(packages.get_config_param_value(3)[0][0])
