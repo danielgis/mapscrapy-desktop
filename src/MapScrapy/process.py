@@ -8,6 +8,8 @@ import json
 import time
 from MapScrapy import settings
 from MapScrapy import packages
+# import packages
+from requests.exceptions import ConnectionError
 # import settings
 
 _ERROR_NOT_URL = 'No se ingreso la url del servicio'
@@ -60,6 +62,7 @@ def validatePath(*args, **kwargs):
 
 class DownloadService(object):
 	def __init__(self, *args, **kwargs):
+		global _CONTROLLER
 		self.url = kwargs.get('url')
 		self.output = kwargs.get('output')
 
@@ -79,6 +82,8 @@ class DownloadService(object):
 		self.oidname = str()
 		self.output_shp = str()
 
+		_CONTROLLER = 0
+
 		# _WAIT = 10*60
 		# _TRIED = 3
 
@@ -93,9 +98,10 @@ class DownloadService(object):
 		self.objectids = [response_as_json[self.paramsObjectids][i:i + _RANGE] for i in range(0, len(response_as_json['objectIds']), _RANGE)]
 
 
-	def downloadOne(self, objectisd):
+	def downloadOne(self, objectids):
+		global _CONTROLLER
 		try:
-			objectIds = ', '.join(map(lambda i: str(i), objectisd))
+			objectIds = ', '.join(map(lambda i: str(i), objectids))
 			self.data['where'] = "{} IN ({})".format(self.oidname, objectIds)
 
 			response = requests.post(self.urlQuery, self.data)
@@ -104,18 +110,25 @@ class DownloadService(object):
 			gdf = gpd.GeoDataFrame().from_features(response_as_json)
 
 			self.responses.append(gdf)
-		except:
+		except ConnectionError as e:
+			print(str(e))
 			_CONTROLLER = _CONTROLLER + 1
 			if _CONTROLLER < _TRIED:
+				print("Intento nro 1")
 				time.sleep(_WAIT)
 				self.downloadOne(objectids)
-			pass
+			else:
+				print("Se supero la cantidad maxima de intentos")
+		except Exception as e:
+			raise RuntimeError(str(e))
+		finally:
+			_CONTROLLER = 0
 
 
 	def download(self):
 		del self.data['returnIdsOnly']
 
-		for oid in self.objectids:
+		for i, oid in enumerate(self.objectids):
 			self.downloadOne(oid)
 
 		name_shp = 'response_{}.shp'.format(uuid.uuid4())
@@ -132,5 +145,3 @@ class DownloadService(object):
 		self.setObjectidsParams()
 		self.download()
 		return self.output_shp
-
-

@@ -122,7 +122,6 @@ class Mapscrapy(toga.App):
             self.web.url = url
             self.web.refresh()
         else:
-            print('entra correctamente')
             self.show_window_error(validate['message'])
 
 
