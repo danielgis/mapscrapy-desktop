@@ -161,6 +161,10 @@ class DownloadService(object):
             gdf_final.drop('Shape.STAr', axis=1, inplace=True)
         if 'Shape.STLe' in gdf_final.columns:
             gdf_final.drop('Shape.STLe', axis=1, inplace=True)
+        if 'SHAPE.LEN' in gdf_final.columns:
+            gdf_final.drop('SHAPE.LEN', axis=1, inplace=True)
+        if 'SHAPE.AREA' in gdf_final.columns:
+            gdf_final.drop('SHAPE.AREA', axis=1, inplace=True)
 
         gdf_final.to_file(self.output_shp)
 
