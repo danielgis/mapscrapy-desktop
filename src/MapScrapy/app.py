@@ -8,6 +8,7 @@ from MapScrapy.process import *
 from datetime import datetime
 import subprocess
 import tempfile
+
 # from MapScrapy import packages
 
 _DATE = datetime.now()
@@ -37,21 +38,20 @@ class Mapscrapy(toga.App):
             outputFolder = tempfile.gettempdir()
             packages.set_config_param(5, outputFolder)
 
-
         self.pid = None
         # contenedor principal de la aplicacion
         main_box = toga.Box(style=Pack(direction=COLUMN, padding=10))
-        
+
         # contenedor primario para carga de url
         first_box = toga.Box(style=Pack(direction=ROW))
         second_box = toga.Box(style=Pack(direction=ROW))
 
         # Input text de la url del servicio
         self.url_input = toga.TextInput(placeholder=_TX_URL_PLACEHOLDER, style=Pack(flex=3))
-        
-        # Boton que permite cargar la url
-        self.url_load = toga.Button(_TX_LOADURL_BUTTON, on_press=self.load_metadata, style=Pack(width=150, height=36, background_color='#fbceb5'))
 
+        # Boton que permite cargar la url
+        self.url_load = toga.Button(_TX_LOADURL_BUTTON, on_press=self.load_metadata,
+                                    style=Pack(width=150, height=36, background_color='#fbceb5'))
 
         # Se agregan los elementos al contenedor primario
         first_box.add(self.url_input)
@@ -82,14 +82,12 @@ class Mapscrapy(toga.App):
         # self.updateurl = toga.Button(_TC_UPDATEURL_BUTTON, on_press=self.updateUrl)
 
         # Boton de decarga
-        self.download = toga.Button(_TC_DOWNLOAD_BUTTON, on_press=self.download, style=Pack(background_color='#52de97', height=36))
+        self.download = toga.Button(_TC_DOWNLOAD_BUTTON, on_press=self.download,
+                                    style=Pack(background_color='#52de97', height=36))
 
         # Boton para abril la descarga
         self.openfolder = toga.Button(_TC_OPENFOLDER_BUTTON, on_press=self.openSaveAs, style=Pack(height=36))
         # self.openfolder.enabled = False
-
-
-        
 
         main_box.add(first_box)
         # main_box.add(self.metadata)
@@ -101,18 +99,14 @@ class Mapscrapy(toga.App):
         main_box.add(self.download)
         main_box.add(self.openfolder)
 
-
-        self.main_window = toga.MainWindow(title=self.formal_name, size=(640, 800))
+        self.main_window = toga.MainWindow(title=self.formal_name + ' by DanielGIS', size=(640, 800))
         self.main_window.content = main_box
         self.main_window.show()
 
         self.response_pool = list()
         self.inputsConfig = dict()
 
-
         # Ventana de configuracion
-
-
 
     def load_metadata(self, widget):
         url = self.url_input.value
@@ -123,7 +117,6 @@ class Mapscrapy(toga.App):
             self.web.refresh()
         else:
             self.show_window_error(validate['message'])
-
 
     def run_loader(self, kill=False):
         global _PID_EXE
@@ -144,7 +137,6 @@ class Mapscrapy(toga.App):
         exec_datetime = '\n' + datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         msg = _MESSAGE_COMPLEMENT_SUCCESS + exec_datetime
         self.window.info_dialog(_TITLE_SUCCESS, msg)
-
 
     def download(self, widget):
         self.run_loader()
@@ -172,7 +164,7 @@ class Mapscrapy(toga.App):
         self.url_load.enabled = True
         self.savefolder.enabled = True
         self.download.enabled = True
-        
+
         return response
 
     def saveAs(self, widget):
@@ -207,8 +199,6 @@ class Mapscrapy(toga.App):
             defaultbtn = toga.Button('Default parameters', on_press=self.defaultConfig, style=Pack(flex=1, height=36))
             logbtn = toga.Button('Registry', on_press=self.logReport, style=Pack(flex=1, height=36))
             savebtn = toga.Button('Save', on_press=self.saveConfig, style=Pack(flex=2, height=36))
-            
-            
 
             config_box_btn.add(logbtn)
             config_box_btn.add(defaultbtn)
@@ -220,9 +210,8 @@ class Mapscrapy(toga.App):
             config_window.content = config_box
             config_window.show()
         except Exception as e:
-            self.inputsConfig = dict()            
+            self.inputsConfig = dict()
             self.show_window_error(str(e))
-
 
     def saveConfig(self, widget):
         try:
@@ -234,14 +223,12 @@ class Mapscrapy(toga.App):
         except Exception as e:
             self.show_window_error(str(e))
 
-
     def defaultConfig(self, widget):
         try:
             for i in packages.get_config_default():
                 self.inputsConfig[i[0]].value = i[2]
         except Exception as e:
             self.show_window_error(str(e))
-
 
     def logReport(self, widget):
         try:
@@ -251,10 +238,6 @@ class Mapscrapy(toga.App):
             os.startfile(csv)
         except Exception as e:
             self.show_window_error(str(e))
-
-
-
-
 
     # def updateUrl(self, widget):
     #     self.web.refresh()

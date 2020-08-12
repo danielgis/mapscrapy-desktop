@@ -155,6 +155,10 @@ class DownloadService(object):
         self.output_shp = os.path.join(self.output, name_shp)
 
         gdf_final = gpd.GeoDataFrame(pd.concat(self.responses, ignore_index=True))
+
+        if 'Shape.STLe' in gdf_final.columns:
+            gdf_final.drop('Shape.STLe', axis=1, inplace=True)
+
         gdf_final.to_file(self.output_shp)
 
     @manageResponse
