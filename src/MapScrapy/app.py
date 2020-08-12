@@ -8,6 +8,7 @@ from MapScrapy.process import *
 from datetime import datetime
 import subprocess
 import tempfile
+from MapScrapy import location
 
 # from MapScrapy import packages
 
@@ -32,6 +33,8 @@ _PID_EXE = None
 class Mapscrapy(toga.App):
 
     def startup(self):
+
+        location.location_use()
 
         outputFolder = packages.get_config_param_value(5)[0][0]
         if not outputFolder or outputFolder == '%temp%':

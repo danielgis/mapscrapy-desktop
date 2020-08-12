@@ -37,7 +37,9 @@ requires = [
     'geopandas',
     'requests',
     'validators',
-    'arcgis2geojson'
+    'arcgis2geojson',
+    'pymongo',
+    'geocoder'
 ]
 
 # Mobile deployments

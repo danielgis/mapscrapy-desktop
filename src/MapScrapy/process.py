@@ -156,6 +156,9 @@ class DownloadService(object):
 
         gdf_final = gpd.GeoDataFrame(pd.concat(self.responses, ignore_index=True))
 
+        # Eliminando campos no legibles desde ArcMap
+        if 'Shape.STAr' in gdf_final.columns:
+            gdf_final.drop('Shape.STAr', axis=1, inplace=True)
         if 'Shape.STLe' in gdf_final.columns:
             gdf_final.drop('Shape.STLe', axis=1, inplace=True)
 
