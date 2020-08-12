@@ -4,7 +4,7 @@ requires = ["briefcase"]
 [tool.briefcase]
 project_name = "Mapscrapy"
 bundle = "io.danielgis.github"
-version = "0.0.1"
+version = "1.2"
 url = "https://danielgis.github.io/mapscrapy"
 license = "MIT license"
 author = 'DanielGIS (Daniel Aguado H.)'
@@ -35,7 +35,8 @@ requires = [
     'C:\daniel\desarrollo\mapscrapy-desktop\requires\Fiona-1.8.13-cp37-cp37m-win_amd64.whl',
     'geopandas',
     'requests',
-    'validators'
+    'validators',
+    'arcgis2geojson'
 ]
 
 # Mobile deployments

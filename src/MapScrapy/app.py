@@ -33,7 +33,7 @@ class Mapscrapy(toga.App):
     def startup(self):
 
         outputFolder = packages.get_config_param_value(5)[0][0]
-        if not outputFolder:
+        if not outputFolder or outputFolder == '%temp%':
             outputFolder = tempfile.gettempdir()
             packages.set_config_param(5, outputFolder)
 
