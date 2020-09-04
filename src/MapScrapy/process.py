@@ -12,6 +12,7 @@ from MapScrapy import packages
 from requests.exceptions import ConnectionError
 # import settings
 import urllib3
+from osgeo import ogr, osr
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -69,9 +70,22 @@ def validatePath(*args, **kwargs):
     return True
 
 
+def create_spatial_reference_prj_file(epsg, output):
+    print(epsg)
+    sr = osr.SpatialReference()
+    sr.ImportFromEPSG(epsg)
+    sr.MorphToESRI()
+    csr_string = sr.ExportToWkt()
+    with open(output, 'w') as f:
+        f.write(csr_string)
+        f.close()
+    del f
+
+
 class DownloadService(object):
     def __init__(self, *args, **kwargs):
         global _CONTROLLER
+        self.objectids = list()
         self.url = kwargs.get('url')
         self.output = kwargs.get('output')
 
@@ -84,21 +98,29 @@ class DownloadService(object):
         self.paramobjectIdFieldName = 'objectIdFieldName'
         self.paramsObjectids = 'objectIds'
 
+        # self.epsg = int()
         # _RANGE = _RANGE
 
         self.obectids = list()
         self.responses = list()
         self.oidname = str()
         self.output_shp = str()
+        self.output_prj = str()
 
         _CONTROLLER = 0
-
-    # _WAIT = 10*60
-    # _TRIED = 3
 
     @property
     def urlQuery(self):
         return '{}/query'.format(self.url)
+
+    def set_epsg(self):
+        url = '{}?f=pjson'.format(self.url)
+        response = requests.get(url)
+        response2json = response.json()
+        if response2json.get('extent'):
+            self.data['outSR'] = response2json['extent']['spatialReference']['wkid']
+        else:
+            pass
 
     def setObjectidsParams(self):
         response = requests.post(self.urlQuery, data=self.data, verify=False)
@@ -109,6 +131,9 @@ class DownloadService(object):
 
         if response.status_code == 200:
             response_as_json = response.json()
+            if not response_as_json.get(self.paramobjectIdFieldName):
+                response_as_json = response_as_json['properties']
+
             self.oidname = response_as_json[self.paramobjectIdFieldName]
             self.objectids = [response_as_json[self.paramsObjectids][i:i + _RANGE] for i in
                               range(0, len(response_as_json['objectIds']), _RANGE)]
@@ -148,11 +173,16 @@ class DownloadService(object):
     def download(self):
         del self.data['returnIdsOnly']
 
+        self.set_epsg()
+
         for i, oid in enumerate(self.objectids):
             self.downloadOne(oid)
 
-        name_shp = 'response_{}.shp'.format(uuid.uuid4())
+        _uuid_id = uuid.uuid4()
+        name_shp = 'response_{}.shp'.format(_uuid_id)
+        name_prj = 'response_{}.prj'.format(_uuid_id)
         self.output_shp = os.path.join(self.output, name_shp)
+        self.output_prj = os.path.join(self.output, name_prj)
 
         gdf_final = gpd.GeoDataFrame(pd.concat(self.responses, ignore_index=True))
 
@@ -167,6 +197,10 @@ class DownloadService(object):
             gdf_final.drop('SHAPE.AREA', axis=1, inplace=True)
 
         gdf_final.to_file(self.output_shp)
+
+        if self.data.get('outSR'):
+            sr = 3857 if self.data['outSR'] == 102100 else self.data['outSR']
+            create_spatial_reference_prj_file(sr, self.output_prj)
 
     @manageResponse
     def downloadProcess(self):
